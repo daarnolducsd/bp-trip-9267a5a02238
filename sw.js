@@ -1,5 +1,5 @@
 /* Service worker: offline app shell + runtime map-tile caching */
-const VERSION = 'v2';
+const VERSION = 'v5';
 const SHELL = 'hu-trip-shell-' + VERSION;
 const TILES = 'hu-trip-tiles';
 
@@ -8,12 +8,24 @@ const TILES = 'hu-trip-tiles';
 const SHELL_ASSETS = [
   './',
   './index.html',
+  './itinerary.html',
+  './london.html',
   './manifest.webmanifest',
+  './london.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
+  './icon-london-192.png',
+  './icon-london-512.png',
+  './apple-touch-london.png',
   './tickets/ticket-britishmuseum.png',
   './tickets/BritishMuseum.pdf',
+  './tickets/ticket-westminster.png',
+  './tickets/TicketOrderWSORD-24052026-221739230.pdf',
+  './tickets/ticket-kingsgallery.png',
+  './tickets/Kings Gallery Tickets.pdf',
+  './tickets/ticket-buckingham.png',
+  './tickets/Buckingham Palace Tickets.pdf',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>London Trip Itinerary 2026</title>
+<!-- PWA: installable, full-screen, offline -->
+<link rel="manifest" href="london.webmanifest">
+<meta name="theme-color" content="#16315f">
+<link rel="icon" type="image/png" href="icon-london-192.png">
+<!-- iOS home-screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="London Trip">
+<link rel="apple-touch-icon" href="apple-touch-london.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+  :root{
+    /* Union flag palette: red #CD2A3E · white #FFFFFF · royal blue #16315f */
+    --bg:#f4f6fa; --card:#fff; --ink:#222; --muted:#6b7783;
+    --accent:#CD2A3E; --accent2:#16315f; --line:#dde2ea; --warn:#b07a00;
+    --transit:#1565c0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45}
+  header{position:sticky;top:0;z-index:600;background:var(--accent2);color:#fff;
+    padding:.7rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+    box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header h1{font-size:1.15rem;margin:0;font-weight:600;flex:1 1 auto}
+  .controls{display:flex;gap:.4rem;flex-wrap:wrap}
+  .btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);
+    padding:.35rem .7rem;border-radius:999px;font-size:.85rem;cursor:pointer}
+  .btn:hover{background:rgba(255,255,255,.3)}
+  .seg{display:inline-flex;border:1px solid rgba(255,255,255,.5);border-radius:999px;overflow:hidden}
+  .seg button{background:transparent;color:#fff;border:0;padding:.35rem .7rem;font-size:.85rem;cursor:pointer}
+  .seg button.active{background:#fff;color:var(--accent);font-weight:600}
+  nav.days{display:flex;gap:.4rem;overflow-x:auto;padding:.6rem 1rem;background:#e8eef6;
+    border-bottom:1px solid var(--line);position:sticky;top:57px;z-index:550}
+  nav.days button{flex:0 0 auto;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:.35rem .6rem;font-size:.8rem;cursor:pointer;text-align:center;line-height:1.2}
+  nav.days button .num{display:block;font-weight:700;color:var(--accent)}
+  nav.days button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  nav.days button.active .num{color:#fff}
+  .wrap{max-width:1200px;margin:0 auto;padding:1rem}
+  .resv{background:#fff7e6;border:1px solid #f0d9a0;border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem}
+  .resv h2{margin:.1rem 0 .5rem;font-size:1rem;color:var(--warn)}
+  .resv ul{margin:.2rem 0;padding-left:1.2rem}
+  .resv li{margin:.2rem 0;font-size:.9rem}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start}
+  .dayhead{margin:.2rem 0 .8rem}
+  .dayhead h2{margin:0;font-size:1.3rem}
+  .dayhead .sub{color:var(--muted);font-size:.9rem}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:.7rem .85rem;margin-bottom:.7rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .item .tod{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .item .act{font-size:1.02rem;font-weight:600;margin:.15rem 0}
+  .item .loc{font-size:.85rem;color:var(--muted)}
+  .item .loc::before{content:"📍 "}
+  .tags{margin-top:.5rem;display:flex;flex-direction:column;gap:.4rem}
+  .tag{display:block;font-size:.85rem;border-radius:8px;padding:.45rem .6rem;text-decoration:none}
+  .tag b{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.1rem}
+  .tag.dine{background:#eef6f0;border:1px solid #cfe6d6;color:#1f4d36}
+  .tag.dine b{color:var(--accent2)}
+  .tag.dine .recos{margin:.15rem 0 0;padding-left:1.1rem}
+  .tag.dine .recos li{margin:.1rem 0}
+  .tag.dine a{color:var(--accent2);font-weight:600}
+  .tag.transit{background:#e8f1fb;border:1px solid #c3dbf3;color:var(--transit);font-weight:600}
+  .tag.transit b{color:var(--transit)}
+  .tag.transit::before{content:"🚊 "}
+  .tag.reserve{background:#fff3da;border:1px solid #f0d9a0;color:#8a6400}
+  .tag.reserve b{color:var(--warn)}
+  .tag.reserve::before{content:"⏰ "}
+  .opt{background:#eef2f8;border:1px solid var(--line);border-left:3px solid var(--accent2);
+    border-radius:8px;padding:.5rem .6rem;margin-top:.5rem}
+  .opt-label{font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .opt-name{font-size:.98rem;font-weight:600;margin:.1rem 0}
+  .opt-note{font-size:.83rem;color:var(--muted);margin:.15rem 0 .1rem}
+  .opt .tag.transit{margin-top:.4rem}
+  .badge-hotel{display:inline-block;background:var(--accent);color:#fff;font-size:.68rem;
+    padding:.12rem .5rem;border-radius:999px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
+  .mapwrap{position:sticky;top:108px}
+  #map{height:70vh;min-height:420px;border-radius:14px;border:1px solid var(--line);
+    box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  .leaflet-popup-content{font-size:.85rem}
+  .note-car{background:#e8f1fb;border:1px solid #c3dbf3;color:var(--transit);
+    border-radius:10px;padding:.5rem .7rem;font-size:.85rem;margin-bottom:.7rem}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;padding:1.5rem 1rem 2.5rem}
+  .tag.ticket{background:#fbf3df;border:1px solid #e8d49a;color:#8a6400;font-weight:600;
+    width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:600}
+  .tag.ticket::before{content:"🎫 "}
+  /* ticket popup */
+  #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:2000;
+    display:none;align-items:center;justify-content:center;padding:.6rem}
+  #tkModal.open{display:flex}
+  .tk-box{background:#fff;border-radius:14px;width:100%;max-width:880px;max-height:94vh;
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .tk-head{display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;background:var(--accent2);color:#fff}
+  .tk-head h3{margin:0;font-size:1rem;flex:1 1 auto}
+  .tk-x{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;
+    border-radius:8px;padding:.25rem .6rem;font-size:1rem;cursor:pointer;line-height:1}
+  .tk-body{overflow:auto;-webkit-overflow-scrolling:touch;background:#2b2b2b;padding:.6rem}
+  .tk-tic{margin-bottom:.8rem}
+  .tk-tic:last-child{margin-bottom:0}
+  .tk-tic img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px;background:#fff}
+  .tk-tic .pdf{display:inline-block;margin:.5rem auto 0;background:var(--accent2);color:#fff;
+    text-decoration:none;padding:.45rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600}
+  .tk-cap{color:#ddd;font-size:.8rem;text-align:center;margin:.1rem 0 .4rem}
+  /* view modes */
+  body.view-list .mapwrap{display:none}
+  body.view-list .grid{grid-template-columns:1fr}
+  body.view-map .listcol{display:none}
+  body.view-map .grid{grid-template-columns:1fr}
+  @media (max-width:820px){
+    .grid{grid-template-columns:1fr}
+    .mapwrap{position:static}
+    body:not(.view-map):not(.view-list) #map{height:50vh;min-height:320px}
+    nav.days{top:auto;position:static}
+    header{position:static}
+  }
+</style>
+</head>
+<body class="view-both">
+<header>
+  <h1 id="title">Hungary Trip Itinerary</h1>
+  <div class="controls">
+    <div class="seg" id="viewSeg">
+      <button data-view="both" class="active" id="vBoth">Both</button>
+      <button data-view="list" id="vList">List</button>
+      <button data-view="map" id="vMap">Map</button>
+    </div>
+    <a class="btn" href="itinerary.html" title="Hungary trip">🇭🇺 Hungary</a>
+  </div>
+</header>
+
+<nav class="days" id="dayTabs"></nav>
+
+<div class="wrap">
+  <div class="resv" id="resvBox"></div>
+  <div class="dayhead" id="dayHead"></div>
+  <div class="grid">
+    <div class="listcol" id="listCol"></div>
+    <div class="mapwrap"><div id="map"></div></div>
+  </div>
+</div>
+
+<div id="tkModal" role="dialog" aria-modal="true">
+  <div class="tk-box">
+    <div class="tk-head"><h3 id="tkTitle">Tickets</h3><button class="tk-x" id="tkClose">✕</button></div>
+    <div class="tk-body" id="tkBody"></div>
+  </div>
+</div>
+
+<footer id="footer"></footer>
+
+<script>
+/* ---------- UI strings ---------- */
+const UI = {
+  title:{en:"London Trip Itinerary",hu:"Londoni utazás programja"},
+  both:{en:"Both",hu:"Mindkettő"}, list:{en:"List",hu:"Lista"}, map:{en:"Map",hu:"Térkép"},
+  lang:{en:"Magyar 🇭🇺",hu:"English 🇬🇧"},
+  dining:{en:"Where to eat — family / toddler friendly",hu:"Hol együnk — családbarát / kisgyermekes"},
+  transit:{en:"Public transport directions",hu:"Tömegközlekedési útvonal"},
+  reserve:{en:"Book in advance",hu:"Foglalj előre"},
+  hotel:{en:"Hotel",hu:"Szálloda"},
+  resvTitle:{en:"⏰ Reservations & tickets to arrange in advance",hu:"⏰ Előre intézendő foglalások és jegyek"},
+  carNote:{en:"Getting around is by train, Tube and on foot. Tap the transit links for live directions.",
+           hu:"Vonattal, metróval és gyalog közlekedünk. Az útvonalakhoz kattints a tömegközlekedési linkekre."},
+  openMaps:{en:"Open in Google Maps",hu:"Megnyitás a Google Térképen"},
+  tickets:{en:"Tickets",hu:"Jegyek"},
+  openPdf:{en:"Open / download full PDF",hu:"Teljes PDF megnyitása / letöltése"},
+  footer:{en:"Family trip to England · 19–29 July 2026 · maps © OpenStreetMap contributors",
+          hu:"Family trip to England · 19–29 July 2026 · maps © OpenStreetMap contributors"}
+};
+function mapsSearch(q){return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);}
+function transit(dest,origin){
+  origin = origin || "Conrad London St. James, Broadway, London SW1H 0BH";
+  return "https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(origin)+
+         "&destination="+encodeURIComponent(dest)+"&travelmode=transit";
+}
+
+/* ---------- itinerary data ----------
+   Each item: tod (time), act (activity), loc (location) — all {en,hu}.
+   Optional: coord [lat,lng]; pin (map label {en,hu}); hotel; dine; transit; reserve. */
+const DAYS = [
+{ wd:{en:"Sunday",hu:"Vasárnap"}, date:{en:"Jul 19",hu:"júl. 19."}, dateFull:{en:"July 19, 2026",hu:"2026. július 19."}, items:[
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Fly Budapest → London Stansted",hu:"Repülés Budapest → London Stansted"},
+    loc:{en:"Ryanair FR2515 · 16:30 → 18:05",hu:"Ryanair FR2515 · 16:30 → 18:05"}, coord:[51.8860,0.2389],
+    pin:{en:"London Stansted (STN)",hu:"London Stansted (STN)"},
+    reserve:{en:"Ryanair BUD→STN (conf. B2RJ9D) — check in online & download boarding passes in advance.",hu:"Ryanair BUD→STN (visszaig. B2RJ9D) — előre check-in online és beszállókártyák letöltése."} },
+  { tod:{en:"Evening",hu:"Este"},
+    act:{en:"Transfer to Cambridge, check in",hu:"Átutazás Cambridge-be, bejelentkezés"},
+    loc:{en:"Wilde Aparthotel, Round Church St, Cambridge",hu:"Wilde Aparthotel, Round Church St, Cambridge"}, coord:[52.2095,0.1188],
+    pin:{en:"Wilde Aparthotel Cambridge (hotel 1)",hu:"Wilde Aparthotel Cambridge (1. szálloda)"},
+    hotel:"Wilde Aparthotel Cambridge",
+    reserve:{en:"Confirm Wilde Aparthotel Cambridge booking (conf. 418370204) & late check-in.",hu:"Erősítsd meg a Wilde Aparthotel Cambridge foglalást (visszaig. 418370204) és a kései bejelentkezést."} }
+]},
+{ wd:{en:"Monday",hu:"Hétfő"}, date:{en:"Jul 20",hu:"júl. 20."}, dateFull:{en:"July 20, 2026",hu:"2026. július 20."}, items:[
+  { tod:{en:"All day",hu:"Egész nap"},
+    act:{en:"Explore Cambridge — colleges & punting on the Cam",hu:"Cambridge felfedezése — kollégiumok és csónakázás a Cam folyón"},
+    loc:{en:"Cambridge city centre",hu:"Cambridge belváros"}, coord:[52.2045,0.1149],
+    pin:{en:"King's College, Cambridge",hu:"King's College, Cambridge"},
+    transit:{url:transit("King's College Cambridge","Wilde Aparthotel Round Church St Cambridge")} }
+]},
+{ wd:{en:"Tuesday",hu:"Kedd"}, date:{en:"Jul 21",hu:"júl. 21."}, dateFull:{en:"July 21, 2026",hu:"2026. július 21."}, items:[
+  { tod:{en:"All day",hu:"Egész nap"},
+    act:{en:"Cambridge — more exploring / family time",hu:"Cambridge — további felfedezés / családi idő"},
+    loc:{en:"Cambridge",hu:"Cambridge"}, coord:[52.2053,0.1218],
+    pin:{en:"Cambridge",hu:"Cambridge"} }
+]},
+{ wd:{en:"Wednesday",hu:"Szerda"}, date:{en:"Jul 22",hu:"júl. 22."}, dateFull:{en:"July 22, 2026",hu:"2026. július 22."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Train Cambridge → London (King's Cross)",hu:"Vonat Cambridge → London (King's Cross)"},
+    loc:{en:"London King's Cross",hu:"London King's Cross"}, coord:[51.5320,-0.1233],
+    pin:{en:"King's Cross Station",hu:"King's Cross pályaudvar"},
+    transit:{url:transit("London Kings Cross Station","Cambridge Railway Station")} },
+  { tod:{en:"Midday",hu:"Dél"},
+    act:{en:"Check in — Conrad London St. James",hu:"Bejelentkezés — Conrad London St. James"},
+    loc:{en:"22–28 Broadway, London SW1H 0BH",hu:"22–28 Broadway, London SW1H 0BH"}, coord:[51.4992,-0.1337],
+    pin:{en:"Conrad London St. James (hotel 2)",hu:"Conrad London St. James (2. szálloda)"},
+    hotel:"Conrad London St. James",
+    reserve:{en:"Confirm Conrad London St. James booking (conf. 3455180161) & note check-in time.",hu:"Erősítsd meg a Conrad London St. James foglalást (visszaig. 3455180161) és a bejelentkezés idejét."} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Walk around Hyde Park",hu:"Séta a Hyde Parkban"},
+    loc:{en:"Hyde Park",hu:"Hyde Park"}, coord:[51.5073,-0.1657],
+    pin:{en:"Hyde Park",hu:"Hyde Park"},
+    transit:{url:transit("Hyde Park London")} },
+  { tod:{en:"Evening",hu:"Este"},
+    act:{en:"Dinner — Mercado Mayfair or Blue Boar",hu:"Vacsora — Mercado Mayfair vagy Blue Boar"},
+    loc:{en:"Mayfair / by the hotel",hu:"Mayfair / a szálloda mellett"}, coord:[51.5111,-0.1490],
+    pin:{en:"Mercado Mayfair",hu:"Mercado Mayfair"},
+    dine:{ recos:[
+      {name:"Mercado Mayfair", url:mapsSearch("Mercado Mayfair London"),
+       note:{en:"Lively food hall with many stalls — easy with a toddler and varied choices.",hu:"Pezsgő gasztroudvar több standdal — kisgyermekkel is könnyű, sokféle választás."}},
+      {name:"Blue Boar (at the Conrad)", url:mapsSearch("Blue Boar Pub Conrad London Tothill Street"),
+       note:{en:"British pub at the hotel — convenient on arrival day.",hu:"Brit pub a szállodában — kényelmes az érkezés napján."}}
+    ]} }
+]},
+{ wd:{en:"Thursday",hu:"Csütörtök"}, date:{en:"Jul 23",hu:"júl. 23."}, dateFull:{en:"July 23, 2026",hu:"2026. július 23."}, items:[
+  { tod:{en:"Morning · 09:30",hu:"Délelőtt · 09:30"},
+    act:{en:"Westminster Abbey + Diamond Jubilee Galleries",hu:"Westminster-apátság + Gyémánt Jubileumi Galériák"},
+    loc:{en:"Westminster Abbey, London",hu:"Westminster-apátság, London"}, coord:[51.4994,-0.1273],
+    pin:{en:"Westminster Abbey",hu:"Westminster-apátság"},
+    transit:{url:transit("Westminster Abbey London")},
+    tickets:[{ label:{en:"Westminster Abbey · order 1154919 (galleries entry 10:30–11:00)",hu:"Westminster-apátság · rendelés 1154919 (galéria belépés 10:30–11:00)"},
+               img:"tickets/ticket-westminster.png", pdf:"tickets/TicketOrderWSORD-24052026-221739230.pdf" }],
+    reserve:{en:"Westminster Abbey (Theresa) — emailed; print before trip.",hu:"Westminster-apátság (Theresa) — e-mailben megvan; nyomtasd ki indulás előtt."} },
+  { tod:{en:"Midday",hu:"Dél"},
+    act:{en:"Optional: Churchill War Rooms (David)",hu:"Lehetőség: Churchill War Rooms (David)"},
+    loc:{en:"Clive Steps, King Charles St",hu:"Clive Steps, King Charles St"}, coord:[51.5021,-0.1292],
+    pin:{en:"Churchill War Rooms",hu:"Churchill War Rooms"},
+    transit:{url:transit("Churchill War Rooms London")},
+    note:{en:"Possibly David only — decide and book tickets ahead if going.",hu:"Esetleg csak David — döntsd el, és foglalj jegyet előre, ha mentek."},
+    reserve:{en:"Decide on / pre-book Churchill War Rooms tickets.",hu:"Döntsd el / foglald le előre a Churchill War Rooms jegyeket."} },
+  { tod:{en:"Afternoon · 16:00",hu:"Délután · 16:00"},
+    act:{en:"SIX The Musical (Theresa)",hu:"SIX The Musical (Theresa)"},
+    loc:{en:"West End theatre",hu:"West End színház"}, coord:[51.5101,-0.1205],
+    pin:{en:"SIX The Musical",hu:"SIX The Musical"},
+    transit:{url:transit("Vaudeville Theatre Strand London")},
+    reserve:{en:"SIX The Musical 16:00 (Theresa) — have tickets ready.",hu:"SIX The Musical 16:00 (Theresa) — készítsd elő a jegyeket."} }
+]},
+{ wd:{en:"Friday",hu:"Péntek"}, date:{en:"Jul 24",hu:"júl. 24."}, dateFull:{en:"July 24, 2026",hu:"2026. július 24."}, items:[
+  { tod:{en:"Early morning · 08:50",hu:"Kora reggel · 08:50"},
+    act:{en:"British Museum — Out-of-hours tour: Ancient Egypt (David)",hu:"Brit Múzeum — nyitvatartáson kívüli tárlatvezetés: az ókori Egyiptom (David)"},
+    loc:{en:"The British Museum, London",hu:"The British Museum, London"}, coord:[51.5194,-0.1270],
+    pin:{en:"The British Museum",hu:"Brit Múzeum"},
+    transit:{url:transit("The British Museum London")},
+    note:{en:"Arrive early — meeting point is the main entrance gate on Great Russell Street (WC1B 3DG).",hu:"Érkezz korán — a találkozó a Great Russell Street-i főkapunál van (WC1B 3DG)."},
+    tickets:[{ label:{en:"British Museum · order 9473586 (David)",hu:"Brit Múzeum · rendelés 9473586 (David)"},
+               img:"tickets/ticket-britishmuseum.png", pdf:"tickets/BritishMuseum.pdf" }] },
+  { tod:{en:"Midday",hu:"Dél"},
+    act:{en:"John Snow & the Broad Street Pump",hu:"John Snow és a Broad Street-i kút"},
+    loc:{en:"Broadwick St, Soho",hu:"Broadwick St, Soho"}, coord:[51.5134,-0.1367],
+    pin:{en:"Broad Street Pump (Soho)",hu:"Broad Street-i kút (Soho)"},
+    transit:{url:transit("John Snow Broadwick Street Soho London")},
+    note:{en:"The famous cholera-map landmark — the John Snow pub is right beside it.",hu:"A híres kolera-térkép emlékhelye — a John Snow pub közvetlenül mellette van."} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Open afternoon — choose by interest & energy",hu:"Szabad délután — érdeklődés és energia szerint"},
+    loc:{en:"Three options",hu:"Három lehetőség"},
+    note:{en:"Nothing booked — pick whichever suits the group that afternoon.",hu:"Semmi sincs lefoglalva — válaszd, ami aznap délután a csoportnak megfelel."},
+    options:[
+      { label:{en:"🏛️ History",hu:"🏛️ Történelem"},
+        name:{en:"Churchill War Rooms",hu:"Churchill War Rooms"},
+        loc:{en:"King Charles St",hu:"King Charles St"}, coord:[51.5021,-0.1292],
+        transit:transit("Churchill War Rooms London"),
+        note:{en:"WWII underground bunker & Churchill Museum — book ahead.",hu:"II. világháborús földalatti bunker és Churchill Múzeum — foglalj előre."} },
+      { label:{en:"📚 Books & strolling",hu:"📚 Könyvek és séta"},
+        name:{en:"Marylebone — Daunt Books",hu:"Marylebone — Daunt Books"},
+        loc:{en:"Marylebone High St",hu:"Marylebone High St"}, coord:[51.5224,-0.1510],
+        transit:transit("Daunt Books Marylebone London"),
+        note:{en:"Beautiful Edwardian bookshop and a relaxed high-street wander.",hu:"Gyönyörű Edward-kori könyvesbolt és nyugodt utcai séta."} },
+      { label:{en:"⛪ Big sights",hu:"⛪ Nagy látványosságok"},
+        name:{en:"City of London — St Paul's & Tower of London",hu:"City of London — Szent Pál-székesegyház és a Tower"},
+        loc:{en:"City of London",hu:"City of London"}, coord:[51.5138,-0.0984],
+        transit:transit("St Pauls Cathedral London"),
+        note:{en:"St Paul's dome, then riverside to the Tower of London.",hu:"A Szent Pál kupolája, majd a folyóparton a Towerig."} }
+    ] }
+]},
+{ wd:{en:"Saturday",hu:"Szombat"}, date:{en:"Jul 25",hu:"júl. 25."}, dateFull:{en:"July 25, 2026",hu:"2026. július 25."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Tentative: London Transport Museum",hu:"Tervezett: Londoni Közlekedési Múzeum"},
+    loc:{en:"Covent Garden",hu:"Covent Garden"}, coord:[51.5121,-0.1216],
+    pin:{en:"London Transport Museum",hu:"Londoni Közlekedési Múzeum"},
+    transit:{url:transit("London Transport Museum Covent Garden")},
+    note:{en:"Tentative — buses & trains kids can climb on; great for Desmond.",hu:"Tervezett — buszok és vonatok, amikre a gyerekek felmászhatnak; Desmondnak ideális."} },
+  { tod:{en:"Afternoon · 13:30",hu:"Délután · 13:30"},
+    act:{en:"Afternoon Tea at Liberty London (Theresa & Rachel)",hu:"Délutáni tea a Liberty Londonban (Theresa és Rachel)"},
+    loc:{en:"Liberty, Great Marlborough St",hu:"Liberty, Great Marlborough St"}, coord:[51.5138,-0.1410],
+    pin:{en:"Liberty London",hu:"Liberty London"},
+    transit:{url:transit("Liberty London Great Marlborough Street")},
+    note:{en:"Theresa & Rachel have tea and shop; David & Desmond hang out (Soho / Daunt Books / Broad Street Pump).",hu:"Theresa és Rachel teázik és vásárol; David és Desmond együtt lóg (Soho / Daunt Books / Broad Street-i kút)."},
+    dine:{ recos:[
+      {name:"Afternoon Tea at Liberty London", url:mapsSearch("Liberty London afternoon tea"),
+       note:{en:"Booked for Theresa & Rachel — 13:30.",hu:"Theresa és Rachel részére foglalva — 13:30."}}
+    ]},
+    reserve:{en:"Afternoon Tea at Liberty 13:30 — Theresa & Rachel.",hu:"Délutáni tea a Libertyben 13:30 — Theresa és Rachel."} }
+]},
+{ wd:{en:"Sunday",hu:"Vasárnap"}, date:{en:"Jul 26",hu:"júl. 26."}, dateFull:{en:"July 26, 2026",hu:"2026. július 26."}, items:[
+  { tod:{en:"Morning · 09:45",hu:"Délelőtt · 09:45"},
+    act:{en:"The King's Gallery",hu:"A King's Gallery"},
+    loc:{en:"The King's Gallery, Buckingham Palace",hu:"The King's Gallery, Buckingham-palota"}, coord:[51.4994,-0.1419],
+    pin:{en:"The King's Gallery",hu:"King's Gallery"},
+    transit:{url:transit("The Kings Gallery Buckingham Palace London")},
+    tickets:[{ label:{en:"King's Gallery · order 7643272 (admission 09:45–10:00)",hu:"King's Gallery · rendelés 7643272 (belépés 09:45–10:00)"},
+               img:"tickets/ticket-kingsgallery.png", pdf:"tickets/Kings Gallery Tickets.pdf" }],
+    reserve:{en:"King's Gallery (Theresa) — emailed; print before trip.",hu:"King's Gallery (Theresa) — e-mailben megvan; nyomtasd ki indulás előtt."} },
+  { tod:{en:"Late morning",hu:"Késő délelőtt"},
+    act:{en:"Princess Diana Memorial Playground",hu:"Diana hercegnő emlékjátszótér"},
+    loc:{en:"Kensington Gardens",hu:"Kensington Gardens"}, coord:[51.5085,-0.1875],
+    pin:{en:"Diana Memorial Playground",hu:"Diana emlékjátszótér"},
+    transit:{url:transit("Princess Diana Memorial Playground Kensington Gardens")},
+    note:{en:"Check first whether the renovation is complete before heading over.",hu:"Indulás előtt nézd meg, hogy befejeződött-e a felújítás."},
+    reserve:{en:"Check if the Diana Memorial Playground renovation is finished.",hu:"Ellenőrizd, befejeződött-e a Diana emlékjátszótér felújítása."} },
+  { tod:{en:"Midday · 12:00",hu:"Dél · 12:00"},
+    act:{en:"Sunday Roast at the Mall Tavern (with Rachel)",hu:"Vasárnapi sült a Mall Tavernben (Rachellel)"},
+    loc:{en:"Notting Hill",hu:"Notting Hill"}, coord:[51.5093,-0.1949],
+    pin:{en:"The Mall Tavern, Notting Hill",hu:"The Mall Tavern, Notting Hill"},
+    transit:{url:transit("The Mall Tavern Notting Hill London")},
+    dine:{ recos:[
+      {name:"Sunday Roast at the Mall Tavern", url:mapsSearch("The Mall Tavern Notting Hill"),
+       note:{en:"Classic British Sunday roast — Rachel will meet us.",hu:"Klasszikus brit vasárnapi sült — Rachel csatlakozik hozzánk."}}
+    ]},
+    reserve:{en:"Sunday Roast 12:00 at the Mall Tavern — confirm plan & numbers with Rachel.",hu:"Vasárnapi sült 12:00 a Mall Tavernben — egyeztesd a tervet és a létszámot Rachellel."} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Kensington / Notting Hill stroll",hu:"Séta Kensingtonban / Notting Hillben"},
+    loc:{en:"Portobello Road",hu:"Portobello Road"}, coord:[51.5170,-0.2050],
+    pin:{en:"Portobello Road",hu:"Portobello Road"},
+    transit:{url:transit("Portobello Road Notting Hill London")} }
+]},
+{ wd:{en:"Monday",hu:"Hétfő"}, date:{en:"Jul 27",hu:"júl. 27."}, dateFull:{en:"July 27, 2026",hu:"2026. július 27."}, items:[
+  { tod:{en:"Morning · 10:00",hu:"Délelőtt · 10:00"},
+    act:{en:"Buckingham Palace — The State Rooms",hu:"Buckingham-palota — Az állami termek"},
+    loc:{en:"Buckingham Palace, London",hu:"Buckingham-palota, London"}, coord:[51.5014,-0.1419],
+    pin:{en:"Buckingham Palace",hu:"Buckingham-palota"},
+    transit:{url:transit("Buckingham Palace London")},
+    note:{en:"Entry on Buckingham Palace Road; no strollers allowed.",hu:"Belépés a Buckingham Palace Road felől; babakocsi nem megengedett."},
+    tickets:[{ label:{en:"Buckingham Palace State Rooms · order 7643722 (admission 10:00–10:15)",hu:"Buckingham-palota állami termek · rendelés 7643722 (belépés 10:00–10:15)"},
+               img:"tickets/ticket-buckingham.png", pdf:"tickets/Buckingham Palace Tickets.pdf" }],
+    reserve:{en:"Buckingham Palace (Theresa) — emailed; print before trip.",hu:"Buckingham-palota (Theresa) — e-mailben megvan; nyomtasd ki indulás előtt."} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"St James's Park & The Mall stroll",hu:"Séta a St James's Parkban és a Mall-on"},
+    loc:{en:"St James's Park",hu:"St James's Park"}, coord:[51.5025,-0.1340],
+    pin:{en:"St James's Park",hu:"St James's Park"},
+    transit:{url:transit("St James's Park London")} }
+]},
+{ wd:{en:"Tuesday",hu:"Kedd"}, date:{en:"Jul 28",hu:"júl. 28."}, dateFull:{en:"July 28, 2026",hu:"2026. július 28."}, items:[
+  { tod:{en:"All day",hu:"Egész nap"},
+    act:{en:"Open day — choose by interest & energy",hu:"Szabad nap — érdeklődés és energia szerint"},
+    loc:{en:"Three options",hu:"Három lehetőség"},
+    note:{en:"Nothing booked — a flexible final full day in London.",hu:"Semmi sincs lefoglalva — rugalmas utolsó teljes nap Londonban."},
+    options:[
+      { label:{en:"🏛️ History",hu:"🏛️ Történelem"},
+        name:{en:"Churchill War Rooms",hu:"Churchill War Rooms"},
+        loc:{en:"King Charles St",hu:"King Charles St"}, coord:[51.5021,-0.1292],
+        transit:transit("Churchill War Rooms London"),
+        note:{en:"WWII underground bunker & Churchill Museum — book ahead.",hu:"II. világháborús földalatti bunker és Churchill Múzeum — foglalj előre."} },
+      { label:{en:"📚 Books & strolling",hu:"📚 Könyvek és séta"},
+        name:{en:"Marylebone — Daunt Books",hu:"Marylebone — Daunt Books"},
+        loc:{en:"Marylebone High St",hu:"Marylebone High St"}, coord:[51.5224,-0.1510],
+        transit:transit("Daunt Books Marylebone London"),
+        note:{en:"Beautiful Edwardian bookshop and a relaxed high-street wander.",hu:"Gyönyörű Edward-kori könyvesbolt és nyugodt utcai séta."} },
+      { label:{en:"⛪ Big sights",hu:"⛪ Nagy látványosságok"},
+        name:{en:"City of London — St Paul's & Tower of London",hu:"City of London — Szent Pál-székesegyház és a Tower"},
+        loc:{en:"City of London",hu:"City of London"}, coord:[51.5081,-0.0759],
+        transit:transit("Tower of London"),
+        note:{en:"St Paul's dome, then riverside to the Tower of London.",hu:"A Szent Pál kupolája, majd a folyóparton a Towerig."} }
+    ] }
+]},
+{ wd:{en:"Wednesday",hu:"Szerda"}, date:{en:"Jul 29",hu:"júl. 29."}, dateFull:{en:"July 29, 2026",hu:"2026. július 29."}, items:[
+  { tod:{en:"Early morning",hu:"Kora reggel"},
+    act:{en:"Transfer to Heathrow",hu:"Transzfer a Heathrow-ra"},
+    loc:{en:"London → Heathrow (LHR)",hu:"London → Heathrow (LHR)"}, coord:[51.4700,-0.4543],
+    pin:{en:"London Heathrow (LHR)",hu:"London Heathrow (LHR)"},
+    reserve:{en:"Pre-book the transfer to Heathrow for the 11:35 departure.",hu:"Foglald le előre a transzfert a Heathrow-ra a 11:35-ös induláshoz."} },
+  { tod:{en:"Morning · 11:35",hu:"Délelőtt · 11:35"},
+    act:{en:"Fly London Heathrow → San Diego",hu:"Repülés London Heathrow → San Diego"},
+    loc:{en:"British Airways BA0265 · 11:35 → 14:55",hu:"British Airways BA0265 · 11:35 → 14:55"}, coord:[51.4700,-0.4543],
+    pin:{en:"Heathrow → home",hu:"Heathrow → haza"},
+    reserve:{en:"BA0265 LHR→SAN (conf. YRNH8Y) — check in & download boarding passes.",hu:"BA0265 LHR→SAN (visszaig. YRNH8Y) — check-in és beszállókártyák letöltése."} }
+]}
+];
+
+/* ---------- state & rendering ---------- */
+let lang = "en";
+let dayIdx = 0;
+let map, markerGroup;
+const t = o => o ? o[lang] : "";
+
+function initMap(){
+  map = L.map('map',{scrollWheelZoom:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19, attribution:'&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  markerGroup = L.featureGroup().addTo(map);
+}
+
+function renderTabs(){
+  const nav = document.getElementById('dayTabs');
+  nav.innerHTML = '';
+  DAYS.forEach((d,i)=>{
+    const b = document.createElement('button');
+    b.className = i===dayIdx ? 'active' : '';
+    b.innerHTML = '<span class="num">'+(d.date?t(d.date):(i+1))+'</span>'+t(d.wd);
+    b.onclick = ()=>{ dayIdx=i; render(); };
+    nav.appendChild(b);
+  });
+}
+
+function renderReservations(){
+  const box = document.getElementById('resvBox');
+  let rows = [];
+  DAYS.forEach((d,i)=>{
+    d.items.forEach(it=>{ if(it.reserve) rows.push({label:(d.date?t(d.date):('Day '+(i+1))), wd:t(d.wd), text:t(it.reserve)}); });
+  });
+  let html = '<h2>'+t(UI.resvTitle)+'</h2><ul>';
+  rows.forEach(r=>{ html += '<li><b>'+r.label+' · '+r.wd+':</b> '+r.text+'</li>'; });
+  html += '</ul>';
+  box.innerHTML = html;
+}
+
+function renderDay(){
+  const d = DAYS[dayIdx];
+  document.getElementById('dayHead').innerHTML =
+    '<h2>'+t(d.wd)+'</h2>'+(d.dateFull?'<div class="sub">'+t(d.dateFull)+'</div>':'');
+  const col = document.getElementById('listCol');
+  let html = '';
+  if(d.carReturn){ html += '<div class="note-car">🚗➡️🚇 '+t(UI.carNote)+'</div>'; }
+  d.items.forEach((it,idx)=>{
+    html += '<div class="item">';
+    html += '<div class="tod">'+t(it.tod)+'</div>';
+    html += '<div class="act">'+t(it.act);
+    if(it.hotel) html += '<span class="badge-hotel">'+t(UI.hotel)+'</span>';
+    html += '</div>';
+    html += '<div class="loc">'+t(it.loc)+'</div>';
+    if(it.note) html += '<div class="loc" style="margin-top:.3rem;color:#8a6400">✏️ '+t(it.note)+'</div>';
+    html += '<div class="tags">';
+    if(it.transit) html += '<a class="tag transit" target="_blank" rel="noopener" href="'+it.transit.url+'"><b>'+t(UI.transit)+'</b>'+t(UI.openMaps)+'</a>';
+    if(it.tickets) html += '<button class="tag ticket" onclick="openTickets('+dayIdx+','+idx+')">'+t(UI.tickets)+' ('+it.tickets.length+')</button>';
+    if(it.dine){
+      html += '<div class="tag dine"><b>'+t(UI.dining)+'</b><ul class="recos">';
+      it.dine.recos.forEach(r=>{
+        html += '<li><a target="_blank" rel="noopener" href="'+r.url+'">'+r.name+'</a> — '+t(r.note)+'</li>';
+      });
+      html += '</ul></div>';
+    }
+    if(it.options){
+      it.options.forEach(op=>{
+        html += '<div class="opt">';
+        html += '<div class="opt-label">'+t(op.label)+'</div>';
+        html += '<div class="opt-name">'+t(op.name)+'</div>';
+        if(op.loc) html += '<div class="loc">'+t(op.loc)+'</div>';
+        if(op.note) html += '<div class="opt-note">'+t(op.note)+'</div>';
+        if(op.transit) html += '<a class="tag transit" target="_blank" rel="noopener" href="'+op.transit+'"><b>'+t(UI.transit)+'</b>'+t(UI.openMaps)+'</a>';
+        html += '</div>';
+      });
+    }
+    if(it.reserve) html += '<div class="tag reserve"><b>'+t(UI.reserve)+'</b>'+t(it.reserve)+'</div>';
+    html += '</div></div>';
+  });
+  col.innerHTML = html;
+}
+
+function renderMap(){
+  markerGroup.clearLayers();
+  const d = DAYS[dayIdx];
+  d.items.forEach((it,idx)=>{
+    if(it.options){
+      it.options.forEach(op=>{
+        if(!op.coord) return;
+        const m = L.marker(op.coord).addTo(markerGroup);
+        m.bindPopup('<b>'+t(op.name)+'</b><br>'+t(op.label));
+      });
+      return;
+    }
+    if(!it.coord) return;
+    const label = (it.pin? t(it.pin) : t(it.loc));
+    const m = L.marker(it.coord).addTo(markerGroup);
+    m.bindPopup('<b>'+(idx+1)+'. '+label+'</b><br>'+t(it.act));
+  });
+  if(markerGroup.getLayers().length){
+    map.fitBounds(markerGroup.getBounds().pad(0.25), {maxZoom:14});
+  }
+  setTimeout(()=>map.invalidateSize(), 50);
+}
+
+function applyStaticText(){
+  document.documentElement.lang = lang;
+  document.getElementById('title').textContent = t(UI.title);
+  document.getElementById('vBoth').textContent = t(UI.both);
+  document.getElementById('vList').textContent = t(UI.list);
+  document.getElementById('vMap').textContent = t(UI.map);
+  document.getElementById('footer').textContent = t(UI.footer);
+}
+
+function render(){
+  applyStaticText();
+  renderTabs();
+  renderReservations();
+  renderDay();
+  renderMap();
+}
+
+/* controls */
+document.getElementById('viewSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#viewSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.body.className = 'view-'+b.dataset.view;
+  setTimeout(()=>{ map.invalidateSize(); renderMap(); }, 60);
+});
+
+/* ---------- ticket popup ---------- */
+function openTickets(di, ii){
+  const it = DAYS[di].items[ii];
+  if(!it || !it.tickets) return;
+  document.getElementById('tkTitle').textContent = t(UI.tickets) + ' — ' + t(it.act);
+  let html = '';
+  it.tickets.forEach(tk=>{
+    html += '<div class="tk-tic">';
+    if(tk.label) html += '<div class="tk-cap">'+t(tk.label)+'</div>';
+    if(tk.img) html += '<a href="'+tk.pdf+'" target="_blank" rel="noopener"><img src="'+tk.img+'" alt="'+(tk.label?t(tk.label):'ticket')+'"></a>';
+    if(tk.pdf) html += '<div style="text-align:center"><a class="pdf" href="'+tk.pdf+'" target="_blank" rel="noopener">📄 '+t(UI.openPdf)+'</a></div>';
+    html += '</div>';
+  });
+  document.getElementById('tkBody').innerHTML = html;
+  document.getElementById('tkModal').classList.add('open');
+}
+function closeTickets(){ document.getElementById('tkModal').classList.remove('open'); }
+document.getElementById('tkClose').onclick = closeTickets;
+document.getElementById('tkModal').addEventListener('click', e=>{ if(e.target.id==='tkModal') closeTickets(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeTickets(); });
+
+initMap();
+render();
+
+/* register service worker for offline use */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

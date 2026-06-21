@@ -1,0 +1,10 @@
+# OS / editor
+.DS_Store
+**/.DS_Store
+.claude/
+
+# Not part of the published site
+CLAUDE.md
+london-crown.svg
+*.xlsx
+itinerary/

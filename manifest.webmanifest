@@ -2,7 +2,7 @@
   "name": "Hungary Trip Itinerary",
   "short_name": "Hungary Trip",
   "description": "Family trip to Hungary 2026 — day-by-day itinerary, maps, restaurants.",
-  "start_url": "./index.html",
+  "start_url": "./itinerary.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

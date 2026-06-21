@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Hungary Trip Itinerary 2026</title>
+<!-- PWA: installable, full-screen, offline -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#436F4D">
+<link rel="icon" type="image/png" href="icon-192.png">
+<!-- iOS home-screen app -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Hungary Trip">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+  :root{
+    /* Hungarian flag palette: red #CD2A3E · white #FFFFFF · green #436F4D */
+    --bg:#f4f7f4; --card:#fff; --ink:#222; --muted:#6b7783;
+    --accent:#CD2A3E; --accent2:#436F4D; --line:#dfe6df; --warn:#b07a00;
+    --transit:#1565c0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45}
+  header{position:sticky;top:0;z-index:600;background:var(--accent2);color:#fff;
+    padding:.7rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+    box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header h1{font-size:1.15rem;margin:0;font-weight:600;flex:1 1 auto}
+  .controls{display:flex;gap:.4rem;flex-wrap:wrap}
+  .btn{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.5);
+    padding:.35rem .7rem;border-radius:999px;font-size:.85rem;cursor:pointer}
+  .btn:hover{background:rgba(255,255,255,.3)}
+  .seg{display:inline-flex;border:1px solid rgba(255,255,255,.5);border-radius:999px;overflow:hidden}
+  .seg button{background:transparent;color:#fff;border:0;padding:.35rem .7rem;font-size:.85rem;cursor:pointer}
+  .seg button.active{background:#fff;color:var(--accent);font-weight:600}
+  nav.days{display:flex;gap:.4rem;overflow-x:auto;padding:.6rem 1rem;background:#eaf1ea;
+    border-bottom:1px solid var(--line);position:sticky;top:57px;z-index:550}
+  nav.days button{flex:0 0 auto;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:.35rem .6rem;font-size:.8rem;cursor:pointer;text-align:center;line-height:1.2}
+  nav.days button .num{display:block;font-weight:700;color:var(--accent)}
+  nav.days button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  nav.days button.active .num{color:#fff}
+  .wrap{max-width:1200px;margin:0 auto;padding:1rem}
+  .resv{background:#fff7e6;border:1px solid #f0d9a0;border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem}
+  .resv h2{margin:.1rem 0 .5rem;font-size:1rem;color:var(--warn)}
+  .resv ul{margin:.2rem 0;padding-left:1.2rem}
+  .resv li{margin:.2rem 0;font-size:.9rem}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;align-items:start}
+  .dayhead{margin:.2rem 0 .8rem}
+  .dayhead h2{margin:0;font-size:1.3rem}
+  .dayhead .sub{color:var(--muted);font-size:.9rem}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:.7rem .85rem;margin-bottom:.7rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .item .tod{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .item .act{font-size:1.02rem;font-weight:600;margin:.15rem 0}
+  .item .loc{font-size:.85rem;color:var(--muted)}
+  .item .loc::before{content:"📍 "}
+  .tags{margin-top:.5rem;display:flex;flex-direction:column;gap:.4rem}
+  .tag{display:block;font-size:.85rem;border-radius:8px;padding:.45rem .6rem;text-decoration:none}
+  .tag b{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.1rem}
+  .tag.dine{background:#eef6f0;border:1px solid #cfe6d6;color:#1f4d36}
+  .tag.dine b{color:var(--accent2)}
+  .tag.dine .recos{margin:.15rem 0 0;padding-left:1.1rem}
+  .tag.dine .recos li{margin:.1rem 0}
+  .tag.dine a{color:var(--accent2);font-weight:600}
+  .tag.transit{background:#e8f1fb;border:1px solid #c3dbf3;color:var(--transit);font-weight:600}
+  .tag.transit b{color:var(--transit)}
+  .tag.transit::before{content:"🚊 "}
+  .tag.reserve{background:#fff3da;border:1px solid #f0d9a0;color:#8a6400}
+  .tag.reserve b{color:var(--warn)}
+  .tag.reserve::before{content:"⏰ "}
+  .opt{background:#f3f7f3;border:1px solid var(--line);border-left:3px solid var(--accent2);
+    border-radius:8px;padding:.5rem .6rem;margin-top:.5rem}
+  .opt-label{font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .opt-name{font-size:.98rem;font-weight:600;margin:.1rem 0}
+  .opt-note{font-size:.83rem;color:var(--muted);margin:.15rem 0 .1rem}
+  .opt .tag.transit{margin-top:.4rem}
+  .badge-hotel{display:inline-block;background:var(--accent);color:#fff;font-size:.68rem;
+    padding:.12rem .5rem;border-radius:999px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.03em}
+  .mapwrap{position:sticky;top:108px}
+  #map{height:70vh;min-height:420px;border-radius:14px;border:1px solid var(--line);
+    box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  .leaflet-popup-content{font-size:.85rem}
+  .note-car{background:#e8f1fb;border:1px solid #c3dbf3;color:var(--transit);
+    border-radius:10px;padding:.5rem .7rem;font-size:.85rem;margin-bottom:.7rem}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;padding:1.5rem 1rem 2.5rem}
+  .tag.ticket{background:#fbf3df;border:1px solid #e8d49a;color:#8a6400;font-weight:600;
+    width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:600}
+  .tag.ticket::before{content:"🎫 "}
+  /* ticket popup */
+  #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:2000;
+    display:none;align-items:center;justify-content:center;padding:.6rem}
+  #tkModal.open{display:flex}
+  .tk-box{background:#fff;border-radius:14px;width:100%;max-width:880px;max-height:94vh;
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .tk-head{display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;background:var(--accent2);color:#fff}
+  .tk-head h3{margin:0;font-size:1rem;flex:1 1 auto}
+  .tk-x{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;
+    border-radius:8px;padding:.25rem .6rem;font-size:1rem;cursor:pointer;line-height:1}
+  .tk-body{overflow:auto;-webkit-overflow-scrolling:touch;background:#2b2b2b;padding:.6rem}
+  .tk-tic{margin-bottom:.8rem}
+  .tk-tic:last-child{margin-bottom:0}
+  .tk-tic img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px;background:#fff}
+  .tk-tic .pdf{display:inline-block;margin:.5rem auto 0;background:var(--accent2);color:#fff;
+    text-decoration:none;padding:.45rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600}
+  .tk-cap{color:#ddd;font-size:.8rem;text-align:center;margin:.1rem 0 .4rem}
+  /* view modes */
+  body.view-list .mapwrap{display:none}
+  body.view-list .grid{grid-template-columns:1fr}
+  body.view-map .listcol{display:none}
+  body.view-map .grid{grid-template-columns:1fr}
+  @media (max-width:820px){
+    .grid{grid-template-columns:1fr}
+    .mapwrap{position:static}
+    body:not(.view-map):not(.view-list) #map{height:50vh;min-height:320px}
+    nav.days{top:auto;position:static}
+    header{position:static}
+  }
+</style>
+</head>
+<body class="view-both">
+<header>
+  <h1 id="title">Hungary Trip Itinerary</h1>
+  <div class="controls">
+    <div class="seg" id="viewSeg">
+      <button data-view="both" class="active" id="vBoth">Both</button>
+      <button data-view="list" id="vList">List</button>
+      <button data-view="map" id="vMap">Map</button>
+    </div>
+    <a class="btn" href="london.html" title="London trip">👑 London</a>
+    <button class="btn" id="langBtn">Magyar 🇭🇺</button>
+  </div>
+</header>
+
+<nav class="days" id="dayTabs"></nav>
+
+<div class="wrap">
+  <div class="resv" id="resvBox"></div>
+  <div class="dayhead" id="dayHead"></div>
+  <div class="grid">
+    <div class="listcol" id="listCol"></div>
+    <div class="mapwrap"><div id="map"></div></div>
+  </div>
+</div>
+
+<div id="tkModal" role="dialog" aria-modal="true">
+  <div class="tk-box">
+    <div class="tk-head"><h3 id="tkTitle">Tickets</h3><button class="tk-x" id="tkClose">✕</button></div>
+    <div class="tk-body" id="tkBody"></div>
+  </div>
+</div>
+
+<footer id="footer"></footer>
+
+<script>
+/* ---------- UI strings ---------- */
+const UI = {
+  title:{en:"Hungary Trip Itinerary",hu:"Magyarországi utazás programja"},
+  both:{en:"Both",hu:"Mindkettő"}, list:{en:"List",hu:"Lista"}, map:{en:"Map",hu:"Térkép"},
+  lang:{en:"Magyar 🇭🇺",hu:"English 🇬🇧"},
+  dining:{en:"Where to eat — family / toddler friendly",hu:"Hol együnk — családbarát / kisgyermekes"},
+  transit:{en:"Public transport directions",hu:"Tömegközlekedési útvonal"},
+  reserve:{en:"Book in advance",hu:"Foglalj előre"},
+  hotel:{en:"Hotel",hu:"Szálloda"},
+  resvTitle:{en:"⏰ Reservations & tickets to arrange in advance",hu:"⏰ Előre intézendő foglalások és jegyek"},
+  carNote:{en:"From here on the rental car is returned — getting around Budapest is by public transport. Tap the transit links for live directions.",
+           hu:"Innentől a bérelt autót visszaadtuk — Budapesten tömegközlekedéssel közlekedünk. Az útvonalakhoz kattints a tömegközlekedési linkekre."},
+  openMaps:{en:"Open in Google Maps",hu:"Megnyitás a Google Térképen"},
+  tickets:{en:"Tickets",hu:"Jegyek"},
+  openPdf:{en:"Open / download full PDF",hu:"Teljes PDF megnyitása / letöltése"},
+  footer:{en:"Family trip to Hungary · 10–20 July 2026 · toggle 🇭🇺 for Hungarian · maps © OpenStreetMap contributors",
+          hu:"Családi utazás Magyarországra · 2026. július 10–20. · 🇬🇧 az angol nézethez · térkép © OpenStreetMap közreműködők"}
+};
+function mapsSearch(q){return "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);}
+function transit(dest,origin){
+  origin = origin || "Párisi Udvar Hotel Budapest";
+  return "https://www.google.com/maps/dir/?api=1&origin="+encodeURIComponent(origin)+
+         "&destination="+encodeURIComponent(dest)+"&travelmode=transit";
+}
+
+/* ---------- itinerary data ----------
+   Each item: tod (time), act (activity), loc (location) — all {en,hu}.
+   Optional: coord [lat,lng]; pin (map label {en,hu}); hotel; dine; transit; reserve. */
+const DAYS = [
+{ wd:{en:"Friday",hu:"Péntek"}, date:{en:"Jul 10",hu:"júl. 10."}, dateFull:{en:"July 10, 2026",hu:"2026. július 10."}, items:[
+  { tod:{en:"Morning / Afternoon",hu:"Délelőtt / Délután"},
+    act:{en:"Arrive, pick up rental car, drive to hotel",hu:"Érkezés, bérelt autó átvétele, út a szállodához"},
+    loc:{en:"Soroksár area",hu:"Soroksár környéke"}, coord:[47.4283,19.0917],
+    pin:{en:"Duna Garden Hotel (1st hotel)",hu:"Duna Garden Hotel (1. szálloda)"},
+    hotel:"Duna Garden Hotel",
+    reserve:{en:"Confirm Duna Garden Hotel booking & late-arrival check-in. Rental car: Schiller, conf. 26-10-4299 (pickup BUD 10 Jul 14:00).",hu:"Erősítsd meg a Duna Garden Hotel foglalást és a kései bejelentkezést. Bérautó: Schiller, visszaig. 26-10-4299 (átvétel BUD júl. 10. 14:00)."} },
+  { tod:{en:"Evening",hu:"Este"},
+    act:{en:"Rest + casual dinner",hu:"Pihenés + kötetlen vacsora"},
+    loc:{en:"Soroksár",hu:"Soroksár"}, coord:[47.4283,19.0917],
+    pin:{en:"Dinner near hotel",hu:"Vacsora a szálloda közelében"} }
+]},
+{ wd:{en:"Saturday",hu:"Szombat"}, date:{en:"Jul 11",hu:"júl. 11."}, dateFull:{en:"July 11, 2026",hu:"2026. július 11."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Cemetery visit – Auchan",hu:"Temetőlátogatás – Auchan"},
+    loc:{en:"Sződliget",hu:"Sződliget"}, coord:[47.7264,19.0992],
+    pin:{en:"Sződliget",hu:"Sződliget"} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Family time / light lunch",hu:"Családi együttlét / könnyű ebéd"},
+    loc:{en:"Soroksár",hu:"Soroksár"}, coord:[47.3956,19.1186],
+    pin:{en:"Soroksár",hu:"Soroksár"} }
+]},
+{ wd:{en:"Sunday",hu:"Vasárnap"}, date:{en:"Jul 12",hu:"júl. 12."}, dateFull:{en:"July 12, 2026",hu:"2026. július 12."}, items:[
+  { tod:{en:"All day",hu:"Egész nap"},
+    act:{en:"Family day",hu:"Családi nap"},
+    loc:{en:"Soroksár",hu:"Soroksár"}, coord:[47.3956,19.1186],
+    pin:{en:"Soroksár",hu:"Soroksár"} }
+]},
+{ wd:{en:"Monday",hu:"Hétfő"}, date:{en:"Jul 13",hu:"júl. 13."}, dateFull:{en:"July 13, 2026",hu:"2026. július 13."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Drive to Tihany",hu:"Utazás Tihanyba"},
+    loc:{en:"Lake Balaton",hu:"Balaton"}, coord:[46.9100,17.8880],
+    pin:{en:"Tihany, Lake Balaton",hu:"Tihany, Balaton"} },
+  { tod:{en:"Late morning",hu:"Késő délelőtt"},
+    act:{en:"Visit Tihany Abbey",hu:"A Tihanyi Apátság megtekintése"},
+    loc:{en:"Tihany",hu:"Tihany"}, coord:[46.9136,17.8893],
+    pin:{en:"Tihany Abbey",hu:"Tihanyi Apátság"},
+    reserve:{en:"Tihany Abbey: check opening hours / buy tickets online (tihany.osb.hu).",hu:"Tihanyi Apátság: nézd meg a nyitvatartást / vegyél jegyet online (tihany.osb.hu)."} },
+  { tod:{en:"Lunch",hu:"Ebéd"},
+    act:{en:"Lunch at Echo Restaurant & Café",hu:"Ebéd az Echo Étteremben"},
+    loc:{en:"Tihany",hu:"Tihany"}, coord:[46.9128,17.8872],
+    pin:{en:"Echo Restaurant & Café",hu:"Echo Étterem & Café"},
+    dine:{ recos:[
+      {name:"Echo Restaurant & Café", url:"https://echoetterem.hu/en",
+       note:{en:"Panoramic Balaton terrace, Hungarian dishes — reserve ahead in summer.",hu:"Panorámás balatoni terasz, magyaros fogások — nyáron foglalj előre."}}
+    ]},
+    reserve:{en:"Echo Restaurant: reservation recommended (terrace fills up in summer).",hu:"Echo Étterem: foglalás ajánlott (a terasz nyáron megtelik)."} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Lakeside relaxation + return drive",hu:"Pihenés a tóparton + visszaút"},
+    loc:{en:"Lake Balaton → Soroksár",hu:"Balaton → Soroksár"}, coord:[46.9050,17.8900],
+    pin:{en:"Tihany lakeside",hu:"Tihanyi tópart"} }
+]},
+{ wd:{en:"Tuesday",hu:"Kedd"}, date:{en:"Jul 14",hu:"júl. 14."}, dateFull:{en:"July 14, 2026",hu:"2026. július 14."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Drive to Children's Railway",hu:"Utazás a Gyermekvasúthoz"},
+    loc:{en:"Buda Hills",hu:"Budai-hegység"}, coord:[47.5163,18.9636],
+    pin:{en:"Children's Railway (Hűvösvölgy)",hu:"Gyermekvasút (Hűvösvölgy)"},
+    reserve:{en:"Children's Railway: check the timetable & buy tickets (gyermekvasut.hu) — limited daily departures.",hu:"Gyermekvasút: nézd meg a menetrendet és vegyél jegyet (gyermekvasut.hu) — napi korlátozott járatok."} },
+  { tod:{en:"Late morning",hu:"Késő délelőtt"},
+    act:{en:"Short scenic train ride",hu:"Rövid, festői vonatozás"},
+    loc:{en:"Children's Railway",hu:"Gyermekvasút"}, coord:[47.4987,18.9889],
+    pin:{en:"Széchenyi-hegy station",hu:"Széchenyi-hegyi állomás"} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Lunch with family",hu:"Ebéd a családdal"},
+    loc:{en:"Near railway",hu:"A vasút közelében"}, coord:[47.5252,18.9722],
+    pin:{en:"Buda Hills",hu:"Budai-hegység"} },
+  { tod:{en:"Late afternoon",hu:"Késő délután"},
+    act:{en:"Rest / light nature time",hu:"Pihenés / kis kikapcsolódás a természetben"},
+    loc:{en:"Buda Hills or Soroksár",hu:"Budai-hegység vagy Soroksár"}, coord:[47.5163,18.9636],
+    pin:{en:"Buda Hills",hu:"Budai-hegység"} }
+]},
+{ wd:{en:"Wednesday",hu:"Szerda"}, date:{en:"Jul 15",hu:"júl. 15."}, dateFull:{en:"July 15, 2026",hu:"2026. július 15."}, carReturn:true, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Drive to hotel, settle the family in",hu:"Utazás a szállodához, a család elhelyezése"},
+    loc:{en:"Párisi Udvar Hotel Budapest",hu:"Párisi Udvar Hotel Budapest"}, coord:[47.4933,19.0567],
+    pin:{en:"Párisi Udvar Hotel (2nd hotel)",hu:"Párisi Udvar Hotel (2. szálloda)"},
+    hotel:"Párisi Udvar Hotel",
+    reserve:{en:"Confirm Párisi Udvar Hotel booking & note check-in time.",hu:"Erősítsd meg a Párisi Udvar Hotel foglalást és a bejelentkezés idejét."} },
+  { tod:{en:"Midday",hu:"Dél"},
+    act:{en:"Return rental car — Schiller office",hu:"Bérelt autó visszaadása — Schiller iroda"},
+    loc:{en:"1133 Budapest, Dráva utca 17.",hu:"1133 Budapest, Dráva utca 17."}, coord:[47.5256,19.0560],
+    pin:{en:"Schiller Rent — Dráva utca 17.",hu:"Schiller Rent — Dráva utca 17."},
+    transit:{url:transit("Dráva utca 17, 1133 Budapest","Párisi Udvar Hotel Budapest")},
+    reserve:{en:"Return the Schiller rental car (conf. 26-10-4299) by 14:00 at 1133 Budapest, Dráva utca 17. (not the airport).",hu:"A Schiller bérautót (visszaig. 26-10-4299) 14:00-ig kell leadni a 1133 Budapest, Dráva utca 17. címen (nem a reptéren)."} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Check-in + rest",hu:"Bejelentkezés + pihenés"},
+    loc:{en:"Párisi Udvar",hu:"Párisi Udvar"}, coord:[47.4933,19.0567],
+    pin:{en:"Párisi Udvar Hotel",hu:"Párisi Udvar Hotel"} },
+  { tod:{en:"Evening",hu:"Este"},
+    act:{en:"Dinner at Kiosk",hu:"Vacsora a Kiosk étteremben"},
+    loc:{en:"Budapest",hu:"Budapest"}, coord:[47.4928,19.0530],
+    pin:{en:"Kiosk Budapest",hu:"Kiosk Budapest"},
+    transit:{url:transit("Kiosk Budapest, Március 15. tér 4")},
+    dine:{ recos:[
+      {name:"Kiosk Budapest", url:"https://kiosk-budapest.hu/",
+       note:{en:"Lively riverside spot, broad menu, high chairs — 4 min walk from the hotel.",hu:"Pezsgő Duna-parti hely, széles étlap, etetőszék — 4 perc séta a szállodától."}}
+    ]},
+    reserve:{en:"Kiosk Budapest: popular — book a table for dinner.",hu:"Kiosk Budapest: népszerű — foglalj asztalt vacsorára."} },
+  { tod:{en:"Evening",hu:"Este"},
+    act:{en:"Short Danube stroll",hu:"Rövid séta a Duna-parton"},
+    loc:{en:"Danube River",hu:"Duna-part"}, coord:[47.4955,19.0490],
+    pin:{en:"Danube promenade",hu:"Duna-korzó"} }
+]},
+{ wd:{en:"Thursday",hu:"Csütörtök"}, date:{en:"Jul 16",hu:"júl. 16."}, dateFull:{en:"July 16, 2026",hu:"2026. július 16."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Castle District + Fisherman's Bastion",hu:"Várnegyed + Halászbástya"},
+    loc:{en:"Buda side",hu:"Budai oldal"}, coord:[47.5021,19.0345],
+    pin:{en:"Fisherman's Bastion",hu:"Halászbástya"},
+    transit:{url:transit("Fisherman's Bastion Budapest")} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Váci Street stroll + snack at Molnár's Lángos",hu:"Séta a Váci utcában + falatozás a Molnár's Lángosnál"},
+    loc:{en:"Central Pest (by the hotel)",hu:"Belváros (a szálloda mellett)"}, coord:[47.4922,19.0537],
+    pin:{en:"Molnár's Lángos / Váci utca",hu:"Molnár's Lángos / Váci utca"},
+    note:{en:"Molnár's Lángos moved here — it's right by the hotel on Váci utca, easy with the toddler.",hu:"A Molnár's Lángos ide került — a szálloda mellett, a Váci utcában, kisgyermekkel is kényelmes."},
+    dine:{ recos:[
+      {name:"Molnár's Lángos (Váci utca)", url:mapsSearch("Molnár's Lángos Váci utca Budapest"),
+       note:{en:"Quick traditional lángos snack, steps from Párisi Udvar.",hu:"Gyors, hagyományos lángos falatozás, pár lépésre a Párisi Udvartól."}}
+    ]} },
+  { tod:{en:"Evening",hu:"Este"},
+    act:{en:"Rest / casual dinner",hu:"Pihenés / kötetlen vacsora"},
+    loc:{en:"Near hotel",hu:"A szálloda közelében"}, coord:[47.4945,19.0560],
+    pin:{en:"Dinner near hotel",hu:"Vacsora a szálloda közelében"} }
+]},
+{ wd:{en:"Friday",hu:"Péntek"}, date:{en:"Jul 17",hu:"júl. 17."}, dateFull:{en:"July 17, 2026",hu:"2026. július 17."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Museum of Ethnography + park time",hu:"Néprajzi Múzeum + idő a parkban"},
+    loc:{en:"City Park",hu:"Városliget"}, coord:[47.5042,19.0786],
+    pin:{en:"Museum of Ethnography",hu:"Néprajzi Múzeum"},
+    transit:{url:transit("Museum of Ethnography Budapest Néprajzi Múzeum")},
+    reserve:{en:"Museum of Ethnography: buy timed tickets online (neprajz.hu) to skip the queue.",hu:"Néprajzi Múzeum: vegyél időpontos jegyet online (neprajz.hu), hogy ne kelljen sorba állni."} },
+  { tod:{en:"Lunch",hu:"Ebéd"},
+    act:{en:"Lunch in City Park",hu:"Ebéd a Városligetben"},
+    loc:{en:"City Park",hu:"Városliget"}, coord:[47.5147,19.0815],
+    pin:{en:"City Park (Városliget)",hu:"Városliget"} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Café at Gerbeaud + Basilica stroll",hu:"Kávé a Gerbeaud-ban + séta a Bazilikához"},
+    loc:{en:"Central Pest / St. Stephen's Basilica",hu:"Belváros / Szent István-bazilika"}, coord:[47.4965,19.0510],
+    pin:{en:"Gerbeaud Café (Vörösmarty tér)",hu:"Gerbeaud Cukrászda (Vörösmarty tér)"},
+    transit:{url:transit("Gerbeaud Café Vörösmarty tér Budapest")},
+    dine:{ recos:[
+      {name:"Café Gerbeaud", url:"https://gerbeaud.hu/",
+       note:{en:"Historic café — cakes & hot chocolate; busy, expect a short wait.",hu:"Patinás kávéház — sütemények és forró csoki; népszerű, számolj rövid várakozással."}}
+    ]} },
+  { tod:{en:"Late afternoon",hu:"Késő délután"},
+    act:{en:"Optional short river walk",hu:"Esetleg rövid séta a folyóparton"},
+    loc:{en:"Danube River",hu:"Duna-part"}, coord:[47.4998,19.0470],
+    pin:{en:"Danube, St. Stephen's side",hu:"Duna, bazilika felőli oldal"} }
+]},
+{ wd:{en:"Saturday",hu:"Szombat"}, date:{en:"Jul 18",hu:"júl. 18."}, dateFull:{en:"July 18, 2026",hu:"2026. július 18."}, items:[
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Flexible morning — choose by weather & energy",hu:"Rugalmas délelőtt — időjárás és energia szerint"},
+    loc:{en:"Three options",hu:"Három lehetőség"},
+    note:{en:"No fixed plan — pick whichever fits the weather and how everyone's feeling that morning.",hu:"Nincs kötött terv — válaszd azt, ami az időjáráshoz és a hangulathoz illik."},
+    options:[
+      { label:{en:"☀️ Clear day & up for a climb",hu:"☀️ Tiszta idő, van energia sétálni"},
+        name:{en:"Gellért Hill & Citadella views",hu:"Gellért-hegy és Citadella kilátás"},
+        loc:{en:"Gellért Hill",hu:"Gellért-hegy"}, coord:[47.4869,19.0463],
+        transit:transit("Gellért Hill Citadella Budapest"),
+        note:{en:"Panoramic city views — best on a clear day; involves some uphill walking.",hu:"Panorámás városkép — tiszta időben a legszebb; némi felfelé sétával jár."} },
+      { label:{en:"🌳 Relaxed pace, fresh air",hu:"🌳 Nyugodt tempó, friss levegő"},
+        name:{en:"Margaret Island (Margitsziget)",hu:"Margitsziget"},
+        loc:{en:"Margaret Island",hu:"Margitsziget"}, coord:[47.5266,19.0464],
+        transit:transit("Margaret Island Budapest Margitsziget"),
+        note:{en:"Flat, green and stroller-friendly — playgrounds, musical fountain and shade.",hu:"Sík, zöld és babakocsibarát — játszóterek, zenélő szökőkút és árnyék."} },
+      { label:{en:"🌧️ Stay local / low energy",hu:"🌧️ Helyben maradunk / kevés energia"},
+        name:{en:"Dohány Street Synagogue",hu:"Dohány utcai zsinagóga"},
+        loc:{en:"Dohány utca (near hotel)",hu:"Dohány utca (a szálloda közelében)"}, coord:[47.4956,19.0610],
+        transit:transit("Dohány Street Synagogue Budapest"),
+        note:{en:"Europe's largest synagogue, a short walk from the hotel — indoors and weather-proof.",hu:"Európa legnagyobb zsinagógája, pár perc séta a szállodától — fedett, időjárástól független."} }
+    ] },
+  { tod:{en:"Midday",hu:"Dél"},
+    act:{en:"Tram ride (Tram 2)",hu:"Villamozás (2-es villamos)"},
+    loc:{en:"Danube River",hu:"Duna-part"}, coord:[47.4980,19.0490],
+    pin:{en:"Tram 2 along the Danube",hu:"2-es villamos a Duna mentén"},
+    transit:{url:transit("Tram 2 Budapest Fővám tér")} },
+  { tod:{en:"Afternoon",hu:"Délután"},
+    act:{en:"Dessert + coffee at Auguszt Cukrászda",hu:"Desszert + kávé az Auguszt Cukrászdában"},
+    loc:{en:"Budapest (Kossuth Lajos u.)",hu:"Budapest (Kossuth Lajos u.)"}, coord:[47.4928,19.0577],
+    pin:{en:"Auguszt Cukrászda",hu:"Auguszt Cukrászda"},
+    dine:{ recos:[
+      {name:"Auguszt Cukrászda", url:mapsSearch("Auguszt Cukrászda Kossuth Lajos utca Budapest"),
+       note:{en:"Family-run since 1870 — classic Hungarian pastries, easy with kids.",hu:"1870 óta családi cukrászda — klasszikus magyar sütemények, gyerekekkel is kényelmes."}}
+    ]} },
+  { tod:{en:"Late afternoon",hu:"Késő délután"},
+    act:{en:"Rest / optional outing",hu:"Pihenés / esetleg program"},
+    loc:{en:"Near hotel",hu:"A szálloda közelében"}, coord:[47.4933,19.0567],
+    pin:{en:"Párisi Udvar Hotel",hu:"Párisi Udvar Hotel"} }
+]},
+{ wd:{en:"Sunday",hu:"Vasárnap"}, date:{en:"Jul 19",hu:"júl. 19."}, dateFull:{en:"July 19, 2026",hu:"2026. július 19."}, items:[
+  { tod:{en:"Early morning",hu:"Kora reggel"},
+    act:{en:"Transfer to airport – Theresa",hu:"Transzfer a reptérre – Theresa"},
+    loc:{en:"Budapest → Airport",hu:"Budapest → Repülőtér"}, coord:[47.4298,19.2611],
+    pin:{en:"Budapest Airport (BUD)",hu:"Budapest Liszt Ferenc Repülőtér"},
+    reserve:{en:"Pre-book the airport transfer / taxi for Theresa's early departure.",hu:"Foglald le előre a reptéri transzfert / taxit Theresa korai indulásához."} },
+  { tod:{en:"Morning",hu:"Délelőtt"},
+    act:{en:"Mass at Franciscan Church",hu:"Szentmise a Ferences templomban"},
+    loc:{en:"Near hotel",hu:"A szálloda közelében"}, coord:[47.4934,19.0573],
+    pin:{en:"Franciscan Church (Ferenciek tere)",hu:"Belvárosi Ferences templom"},
+    transit:{url:transit("Franciscan Church Ferenciek tere Budapest")},
+    reserve:{en:"Check Sunday Mass times at the Franciscan Church (Ferenciek tere).",hu:"Nézd meg a vasárnapi misék időpontját a Ferences templomban (Ferenciek tere)."} },
+  { tod:{en:"Rest of day",hu:"A nap hátralévő része"},
+    act:{en:"TBD",hu:"Később egyeztetjük"},
+    loc:{en:"Budapest",hu:"Budapest"}, coord:[47.4979,19.0402],
+    pin:{en:"Budapest",hu:"Budapest"} }
+]},
+{ wd:{en:"Monday",hu:"Hétfő"}, date:{en:"Jul 20",hu:"júl. 20."}, dateFull:{en:"July 20, 2026",hu:"2026. július 20."}, items:[
+  { tod:{en:"Early morning",hu:"Kora reggel"},
+    act:{en:"Transfer to airport – Helen & Tony",hu:"Transzfer a reptérre – Helen és Tony"},
+    loc:{en:"Budapest → Airport",hu:"Budapest → Repülőtér"}, coord:[47.4298,19.2611],
+    pin:{en:"Budapest Airport (BUD)",hu:"Budapest Liszt Ferenc Repülőtér"},
+    reserve:{en:"Pre-book the airport transfer / taxi for Helen & Tony's departure.",hu:"Foglald le előre a reptéri transzfert / taxit Helen és Tony indulásához."} }
+]}
+];
+
+/* ---------- state & rendering ---------- */
+let lang = "en";
+let dayIdx = 0;
+let map, markerGroup;
+const t = o => o ? o[lang] : "";
+
+function initMap(){
+  map = L.map('map',{scrollWheelZoom:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19, attribution:'&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  markerGroup = L.featureGroup().addTo(map);
+}
+
+function renderTabs(){
+  const nav = document.getElementById('dayTabs');
+  nav.innerHTML = '';
+  DAYS.forEach((d,i)=>{
+    const b = document.createElement('button');
+    b.className = i===dayIdx ? 'active' : '';
+    b.innerHTML = '<span class="num">'+(d.date?t(d.date):(i+1))+'</span>'+t(d.wd);
+    b.onclick = ()=>{ dayIdx=i; render(); };
+    nav.appendChild(b);
+  });
+}
+
+function renderReservations(){
+  const box = document.getElementById('resvBox');
+  let rows = [];
+  DAYS.forEach((d,i)=>{
+    d.items.forEach(it=>{ if(it.reserve) rows.push({label:(d.date?t(d.date):('Day '+(i+1))), wd:t(d.wd), text:t(it.reserve)}); });
+  });
+  let html = '<h2>'+t(UI.resvTitle)+'</h2><ul>';
+  rows.forEach(r=>{ html += '<li><b>'+r.label+' · '+r.wd+':</b> '+r.text+'</li>'; });
+  html += '</ul>';
+  box.innerHTML = html;
+}
+
+function renderDay(){
+  const d = DAYS[dayIdx];
+  document.getElementById('dayHead').innerHTML =
+    '<h2>'+t(d.wd)+'</h2>'+(d.dateFull?'<div class="sub">'+t(d.dateFull)+'</div>':'');
+  const col = document.getElementById('listCol');
+  let html = '';
+  if(d.carReturn){ html += '<div class="note-car">🚗➡️🚇 '+t(UI.carNote)+'</div>'; }
+  d.items.forEach((it,idx)=>{
+    html += '<div class="item">';
+    html += '<div class="tod">'+t(it.tod)+'</div>';
+    html += '<div class="act">'+t(it.act);
+    if(it.hotel) html += '<span class="badge-hotel">'+t(UI.hotel)+'</span>';
+    html += '</div>';
+    html += '<div class="loc">'+t(it.loc)+'</div>';
+    if(it.note) html += '<div class="loc" style="margin-top:.3rem;color:#8a6400">✏️ '+t(it.note)+'</div>';
+    html += '<div class="tags">';
+    if(it.transit) html += '<a class="tag transit" target="_blank" rel="noopener" href="'+it.transit.url+'"><b>'+t(UI.transit)+'</b>'+t(UI.openMaps)+'</a>';
+    if(it.tickets) html += '<button class="tag ticket" onclick="openTickets('+dayIdx+','+idx+')">'+t(UI.tickets)+' ('+it.tickets.length+')</button>';
+    if(it.dine){
+      html += '<div class="tag dine"><b>'+t(UI.dining)+'</b><ul class="recos">';
+      it.dine.recos.forEach(r=>{
+        html += '<li><a target="_blank" rel="noopener" href="'+r.url+'">'+r.name+'</a> — '+t(r.note)+'</li>';
+      });
+      html += '</ul></div>';
+    }
+    if(it.options){
+      it.options.forEach(op=>{
+        html += '<div class="opt">';
+        html += '<div class="opt-label">'+t(op.label)+'</div>';
+        html += '<div class="opt-name">'+t(op.name)+'</div>';
+        if(op.loc) html += '<div class="loc">'+t(op.loc)+'</div>';
+        if(op.note) html += '<div class="opt-note">'+t(op.note)+'</div>';
+        if(op.transit) html += '<a class="tag transit" target="_blank" rel="noopener" href="'+op.transit+'"><b>'+t(UI.transit)+'</b>'+t(UI.openMaps)+'</a>';
+        html += '</div>';
+      });
+    }
+    if(it.reserve) html += '<div class="tag reserve"><b>'+t(UI.reserve)+'</b>'+t(it.reserve)+'</div>';
+    html += '</div></div>';
+  });
+  col.innerHTML = html;
+}
+
+function renderMap(){
+  markerGroup.clearLayers();
+  const d = DAYS[dayIdx];
+  d.items.forEach((it,idx)=>{
+    if(it.options){
+      it.options.forEach(op=>{
+        if(!op.coord) return;
+        const m = L.marker(op.coord).addTo(markerGroup);
+        m.bindPopup('<b>'+t(op.name)+'</b><br>'+t(op.label));
+      });
+      return;
+    }
+    if(!it.coord) return;
+    const label = (it.pin? t(it.pin) : t(it.loc));
+    const m = L.marker(it.coord).addTo(markerGroup);
+    m.bindPopup('<b>'+(idx+1)+'. '+label+'</b><br>'+t(it.act));
+  });
+  if(markerGroup.getLayers().length){
+    map.fitBounds(markerGroup.getBounds().pad(0.25), {maxZoom:14});
+  }
+  setTimeout(()=>map.invalidateSize(), 50);
+}
+
+function applyStaticText(){
+  document.documentElement.lang = lang;
+  document.getElementById('title').textContent = t(UI.title);
+  document.getElementById('langBtn').textContent = t(UI.lang);
+  document.getElementById('vBoth').textContent = t(UI.both);
+  document.getElementById('vList').textContent = t(UI.list);
+  document.getElementById('vMap').textContent = t(UI.map);
+  document.getElementById('footer').textContent = t(UI.footer);
+}
+
+function render(){
+  applyStaticText();
+  renderTabs();
+  renderReservations();
+  renderDay();
+  renderMap();
+}
+
+/* controls */
+document.getElementById('langBtn').onclick = ()=>{ lang = (lang==='en'?'hu':'en'); render(); };
+document.getElementById('viewSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('#viewSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.body.className = 'view-'+b.dataset.view;
+  setTimeout(()=>{ map.invalidateSize(); renderMap(); }, 60);
+});
+
+/* ---------- ticket popup ---------- */
+function openTickets(di, ii){
+  const it = DAYS[di].items[ii];
+  if(!it || !it.tickets) return;
+  document.getElementById('tkTitle').textContent = t(UI.tickets) + ' — ' + t(it.act);
+  let html = '';
+  it.tickets.forEach(tk=>{
+    html += '<div class="tk-tic">';
+    if(tk.label) html += '<div class="tk-cap">'+t(tk.label)+'</div>';
+    if(tk.img) html += '<a href="'+tk.pdf+'" target="_blank" rel="noopener"><img src="'+tk.img+'" alt="'+(tk.label?t(tk.label):'ticket')+'"></a>';
+    if(tk.pdf) html += '<div style="text-align:center"><a class="pdf" href="'+tk.pdf+'" target="_blank" rel="noopener">📄 '+t(UI.openPdf)+'</a></div>';
+    html += '</div>';
+  });
+  document.getElementById('tkBody').innerHTML = html;
+  document.getElementById('tkModal').classList.add('open');
+}
+function closeTickets(){ document.getElementById('tkModal').classList.remove('open'); }
+document.getElementById('tkClose').onclick = closeTickets;
+document.getElementById('tkModal').addEventListener('click', e=>{ if(e.target.id==='tkModal') closeTickets(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeTickets(); });
+
+initMap();
+render();
+
+/* register service worker for offline use */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
