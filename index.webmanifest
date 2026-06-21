@@ -1,0 +1,16 @@
+{
+  "name": "Our 2026 Trips",
+  "short_name": "2026 Trips",
+  "description": "Family Europe trip 2026 — Hungary and London itineraries.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16315f",
+  "theme_color": "#16315f",
+  "icons": [
+    { "src": "icon-split-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-split-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-split-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

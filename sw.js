@@ -1,5 +1,5 @@
 /* Service worker: offline app shell + runtime map-tile caching */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = 'hu-trip-shell-' + VERSION;
 const TILES = 'hu-trip-tiles';
 
@@ -12,6 +12,10 @@ const SHELL_ASSETS = [
   './london.html',
   './manifest.webmanifest',
   './london.webmanifest',
+  './index.webmanifest',
+  './icon-split-192.png',
+  './icon-split-512.png',
+  './apple-touch-split.png',
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
