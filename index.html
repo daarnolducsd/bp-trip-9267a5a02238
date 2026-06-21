@@ -84,6 +84,26 @@
   .note-car{background:#e8f1fb;border:1px solid #c3dbf3;color:var(--transit);
     border-radius:10px;padding:.5rem .7rem;font-size:.85rem;margin-bottom:.7rem}
   footer{text-align:center;color:var(--muted);font-size:.78rem;padding:1.5rem 1rem 2.5rem}
+  .tag.ticket{background:#fbf3df;border:1px solid #e8d49a;color:#8a6400;font-weight:600;
+    width:100%;text-align:left;cursor:pointer;font:inherit;font-weight:600}
+  .tag.ticket::before{content:"🎫 "}
+  /* ticket popup */
+  #tkModal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:2000;
+    display:none;align-items:center;justify-content:center;padding:.6rem}
+  #tkModal.open{display:flex}
+  .tk-box{background:#fff;border-radius:14px;width:100%;max-width:880px;max-height:94vh;
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .tk-head{display:flex;align-items:center;gap:.6rem;padding:.6rem .85rem;background:var(--accent2);color:#fff}
+  .tk-head h3{margin:0;font-size:1rem;flex:1 1 auto}
+  .tk-x{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);color:#fff;
+    border-radius:8px;padding:.25rem .6rem;font-size:1rem;cursor:pointer;line-height:1}
+  .tk-body{overflow:auto;-webkit-overflow-scrolling:touch;background:#2b2b2b;padding:.6rem}
+  .tk-tic{margin-bottom:.8rem}
+  .tk-tic:last-child{margin-bottom:0}
+  .tk-tic img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px;background:#fff}
+  .tk-tic .pdf{display:inline-block;margin:.5rem auto 0;background:var(--accent2);color:#fff;
+    text-decoration:none;padding:.45rem .8rem;border-radius:8px;font-size:.85rem;font-weight:600}
+  .tk-cap{color:#ddd;font-size:.8rem;text-align:center;margin:.1rem 0 .4rem}
   /* view modes */
   body.view-list .mapwrap{display:none}
   body.view-list .grid{grid-template-columns:1fr}
@@ -122,6 +142,13 @@
   </div>
 </div>
 
+<div id="tkModal" role="dialog" aria-modal="true">
+  <div class="tk-box">
+    <div class="tk-head"><h3 id="tkTitle">Tickets</h3><button class="tk-x" id="tkClose">✕</button></div>
+    <div class="tk-body" id="tkBody"></div>
+  </div>
+</div>
+
 <footer id="footer"></footer>
 
 <script>
@@ -138,6 +165,8 @@ const UI = {
   carNote:{en:"From here on the rental car is returned — getting around Budapest is by public transport. Tap the transit links for live directions.",
            hu:"Innentől a bérelt autót visszaadtuk — Budapesten tömegközlekedéssel közlekedünk. Az útvonalakhoz kattints a tömegközlekedési linkekre."},
   openMaps:{en:"Open in Google Maps",hu:"Megnyitás a Google Térképen"},
+  tickets:{en:"Tickets",hu:"Jegyek"},
+  openPdf:{en:"Open / download full PDF",hu:"Teljes PDF megnyitása / letöltése"},
   footer:{en:"Family trip to Hungary · 2026 · toggle 🇭🇺 for Hungarian · maps © OpenStreetMap contributors",
           hu:"Családi utazás Magyarországra · 2026 · 🇬🇧 az angol nézethez · térkép © OpenStreetMap közreműködők"}
 };
@@ -375,6 +404,15 @@ const DAYS = [
     loc:{en:"Budapest → Airport",hu:"Budapest → Repülőtér"}, coord:[47.4298,19.2611],
     pin:{en:"Budapest Airport (BUD)",hu:"Budapest Liszt Ferenc Repülőtér"},
     reserve:{en:"Pre-book the airport transfer / taxi for Helen & Tony's departure.",hu:"Foglald le előre a reptéri transzfert / taxit Helen és Tony indulásához."} }
+]},
+/* ---- London (preview — full itinerary to be added) ---- */
+{ wd:{en:"London",hu:"London"}, items:[
+  { tod:{en:"24 Jul · 08:50",hu:"júl. 24. · 08:50"},
+    act:{en:"British Museum — Out-of-hours tour: Ancient Egypt",hu:"Brit Múzeum — nyitvatartáson kívüli tárlatvezetés: az ókori Egyiptom"},
+    loc:{en:"The British Museum, London",hu:"The British Museum, London"}, coord:[51.5194,-0.1270],
+    pin:{en:"The British Museum",hu:"Brit Múzeum"},
+    tickets:[{ label:{en:"British Museum ticket",hu:"Brit Múzeum jegy"},
+               img:"tickets/ticket-britishmuseum.png", pdf:"tickets/BritishMuseum.pdf" }] }
 ]}
 ];
 
@@ -423,7 +461,7 @@ function renderDay(){
   const col = document.getElementById('listCol');
   let html = '';
   if(d.carReturn){ html += '<div class="note-car">🚗➡️🚇 '+t(UI.carNote)+'</div>'; }
-  d.items.forEach(it=>{
+  d.items.forEach((it,idx)=>{
     html += '<div class="item">';
     html += '<div class="tod">'+t(it.tod)+'</div>';
     html += '<div class="act">'+t(it.act);
@@ -433,6 +471,7 @@ function renderDay(){
     if(it.note) html += '<div class="loc" style="margin-top:.3rem;color:#8a6400">✏️ '+t(it.note)+'</div>';
     html += '<div class="tags">';
     if(it.transit) html += '<a class="tag transit" target="_blank" rel="noopener" href="'+it.transit.url+'"><b>'+t(UI.transit)+'</b>'+t(UI.openMaps)+'</a>';
+    if(it.tickets) html += '<button class="tag ticket" onclick="openTickets('+dayIdx+','+idx+')">'+t(UI.tickets)+' ('+it.tickets.length+')</button>';
     if(it.dine){
       html += '<div class="tag dine"><b>'+t(UI.dining)+'</b><ul class="recos">';
       it.dine.recos.forEach(r=>{
@@ -488,6 +527,27 @@ document.getElementById('viewSeg').addEventListener('click', e=>{
   document.body.className = 'view-'+b.dataset.view;
   setTimeout(()=>{ map.invalidateSize(); renderMap(); }, 60);
 });
+
+/* ---------- ticket popup ---------- */
+function openTickets(di, ii){
+  const it = DAYS[di].items[ii];
+  if(!it || !it.tickets) return;
+  document.getElementById('tkTitle').textContent = t(UI.tickets) + ' — ' + t(it.act);
+  let html = '';
+  it.tickets.forEach(tk=>{
+    html += '<div class="tk-tic">';
+    if(tk.label) html += '<div class="tk-cap">'+t(tk.label)+'</div>';
+    if(tk.img) html += '<a href="'+tk.pdf+'" target="_blank" rel="noopener"><img src="'+tk.img+'" alt="'+(tk.label?t(tk.label):'ticket')+'"></a>';
+    if(tk.pdf) html += '<div style="text-align:center"><a class="pdf" href="'+tk.pdf+'" target="_blank" rel="noopener">📄 '+t(UI.openPdf)+'</a></div>';
+    html += '</div>';
+  });
+  document.getElementById('tkBody').innerHTML = html;
+  document.getElementById('tkModal').classList.add('open');
+}
+function closeTickets(){ document.getElementById('tkModal').classList.remove('open'); }
+document.getElementById('tkClose').onclick = closeTickets;
+document.getElementById('tkModal').addEventListener('click', e=>{ if(e.target.id==='tkModal') closeTickets(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeTickets(); });
 
 initMap();
 render();

@@ -1,5 +1,5 @@
 /* Service worker: offline app shell + runtime map-tile caching */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = 'hu-trip-shell-' + VERSION;
 const TILES = 'hu-trip-tiles';
 
@@ -12,6 +12,8 @@ const SHELL_ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './apple-touch-icon.png',
+  './tickets/ticket-britishmuseum.png',
+  './tickets/BritishMuseum.pdf',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
   'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
 ];
